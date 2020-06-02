@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      // options对象
+      const options = {
+        data() {
+          return {
+            name: "张三",
+            age: 18,
+          };
+        },
+        computed: {
+          introContent() {
+            return `我叫${this.name}, 我今年${this.age}岁`;
+          },
+        },
+        watch: {
+          introContent(newVal) {
+            console.log(newVal);
+          },
+        },
+      };
+      // 通用函数
+      function proxy(target, proxyProp, key) {
+        const proxyObj = {
+          set(newV) {
+            target[proxyProp][key] = newV;
+          },
+          get() {
+            return target[proxyProp][key];
+          },
+        };
+        Object.defineProperty(target, key, proxyObj);
+      }
+
+      function defineReactive(target, key, val) {
+        const proxyObj = {
+          set(newV) {
+            val = newV;
+            console.log(`设置${key},值为${val}`);
+          },
+          get() {
+            console.log(`获取${key},值为${val}`);
+            return val;
+          },
+        };
+        Object.defineProperty(target, key, proxyObj);
+      }
+
+      // 构造函数
+      function Mvvm(options) {
+        this.initData(options);
+      }
+
+      // 原型定义
+      Mvvm.prototype.initData = function (options) {
+        const { data: dataFn } = options;
+        this._data = dataFn();
+        for (let key in this._data) {
+          proxy(this, "_data", key);
+        }
+        for (let key in this._data) {
+          defineReactive(this._data, key, this._data[key]);
+        }
+      };
+      // 测试案例
+      const person = new Mvvm(options);
+      person.name = "李四";
+      console.log(person.name); //张三
+    </script>
+  </body>
+</html>
